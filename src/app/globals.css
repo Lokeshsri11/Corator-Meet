@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lk-bg: #0b0f19;
+  --lk-bg2: #111827;
+  --lk-control-bg: rgba(17, 24, 39, 0.92);
+  --lk-control-hover-bg: rgba(31, 41, 55, 0.95);
+  --lk-fg: #f9fafb;
+  --lk-fg-secondary: #9ca3af;
+  --lk-accent: #3386fc;
+  --lk-accent-hover: #1d67f1;
+  --lk-danger: #ef4444;
+  --lk-success: #22c55e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--lk-bg);
+  color: var(--lk-fg);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.lk-room-container {
+  height: 100%;
+}
+
+.lk-video-conference {
+  height: 100%;
+}
+
+.lk-control-bar {
+  background: var(--lk-control-bg) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.lk-button {
+  border-radius: 9999px !important;
+}
+
+.lk-button[data-lk-active="true"] {
+  background: var(--lk-accent) !important;
+}
+
+.lk-participant-tile {
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lk-participant-metadata {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(8px);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}

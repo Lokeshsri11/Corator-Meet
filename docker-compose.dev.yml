@@ -1,0 +1,15 @@
+# Self-hosted media server for local development.
+# Start: npm run media:up
+# Stop:  npm run media:down
+
+services:
+  livekit:
+    image: livekit/livekit-server:v1.8
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-50100:50000-50100/udp"
+    volumes:
+      - ./deploy/livekit/livekit.dev.yaml:/etc/livekit.yaml:ro
