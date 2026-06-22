@@ -11,10 +11,14 @@ export default function HomePage() {
 
   const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "Corator Meet";
 
-  function goToRoom(roomName: string) {
+  function goToRoom(roomName: string, asHost = false) {
     const slug = slugifyRoomName(roomName);
     if (!slug) return;
-    router.push(`/room/${slug}${name ? `?name=${encodeURIComponent(name)}` : ""}`);
+    const params = new URLSearchParams();
+    if (name) params.set("name", name);
+    if (asHost) params.set("host", "1");
+    const qs = params.toString();
+    router.push(`/room/${slug}${qs ? `?${qs}` : ""}`);
   }
 
   return (
@@ -106,7 +110,7 @@ export default function HomePage() {
 
             <button
               type="button"
-              onClick={() => goToRoom(generateRoomId())}
+              onClick={() => goToRoom(generateRoomId(), true)}
               className="mt-3 w-full rounded-xl border border-white/10 py-3 text-sm text-gray-200 hover:bg-white/5"
             >
               Create new room

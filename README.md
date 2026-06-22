@@ -55,6 +55,8 @@ Open http://localhost:3000 and join from two tabs.
 
 Full guide: **[deploy/livekit/README.md](deploy/livekit/README.md)**
 
+**Same server as Dokploy:** **[deploy/livekit/DOKPLOY.md](deploy/livekit/DOKPLOY.md)** ← start here
+
 Summary:
 
 1. Create Ubuntu VPS (separate from Dokploy)

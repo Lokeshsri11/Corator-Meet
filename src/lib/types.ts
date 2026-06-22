@@ -5,6 +5,7 @@ export type ConnectionDetails = {
   participantIdentity?: string;
   participantToken: string;
   deploymentMode?: "self-hosted" | "cloud";
+  isHost?: boolean;
 };
 
 export type ChatMessage = {
@@ -12,6 +13,13 @@ export type ChatMessage = {
   sender: string;
   text: string;
   timestamp: number;
+};
+
+export type NoteEntry = {
+  id: string;
+  text: string;
+  timestamp: number;
+  source: "speech" | "chat" | "manual";
 };
 
 export type RoomSettings = {

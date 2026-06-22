@@ -16,6 +16,7 @@ function RoomPageContent({ params }: RoomPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultName = searchParams.get("name") ?? "";
+  const isHost = searchParams.get("host") === "1";
 
   const [joined, setJoined] = useState(false);
   const [choices, setChoices] = useState<LocalUserChoices | null>(null);
@@ -34,6 +35,7 @@ function RoomPageContent({ params }: RoomPageProps) {
   return (
     <PreJoinScreen
       roomName={roomName}
+      isHost={isHost}
       onBack={() => router.push("/")}
       onJoin={(userChoices, connectionDetails) => {
         setChoices({

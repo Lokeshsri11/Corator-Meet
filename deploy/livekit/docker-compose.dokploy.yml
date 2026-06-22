@@ -1,0 +1,37 @@
+# Reference compose for Dokploy (after livekit/generate)
+#
+# 1. Run livekit/generate on the server first
+# 2. Copy livekit.yaml from generate output into this folder
+# 3. REMOVE the caddy service from generate's docker-compose (443 conflict with Traefik)
+# 4. Add Traefik labels below to the livekit service
+# 5. Deploy as Compose app in Dokploy OR docker compose up -d on server
+#
+# Replace SFU_HOST with your domain, e.g. sfu.187-127-140-161.sslip.io
+
+services:
+  livekit:
+    image: livekit/livekit-server:v1.8
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    ports:
+      - "7881:7881"
+      - "50000-50200:50000-50200/udp"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.corator-sfu.rule=Host(`sfu.187-127-140-161.sslip.io`)
+      - traefik.http.routers.corator-sfu.entrypoints=websecure
+      - traefik.http.routers.corator-sfu.tls=true
+      - traefik.http.routers.corator-sfu.tls.certresolver=letsencrypt
+      - traefik.http.services.corator-sfu.loadbalancer.server.port=7880
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

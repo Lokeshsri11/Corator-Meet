@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { roomName?: string; participantName?: string };
+  let body: { roomName?: string; participantName?: string; isHost?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
 
   const roomName = body.roomName?.trim();
   const displayName = body.participantName?.trim();
+  const isHost = Boolean(body.isHost);
 
   if (!roomName || !displayName) {
     return NextResponse.json(
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
     canPublish: true,
     canSubscribe: true,
     canPublishData: true,
+    roomAdmin: isHost,
   });
 
   const participantToken = await token.toJwt();
@@ -61,5 +63,6 @@ export async function POST(request: NextRequest) {
     participantIdentity: identity,
     participantToken,
     deploymentMode: config.mode,
+    isHost,
   });
 }

@@ -77,6 +77,7 @@ export function MeetRoom({ choices, details, onLeave }: MeetRoomProps) {
       <MeetConference
         participantName={details.participantName}
         roomName={details.roomName}
+        isHost={details.isHost ?? false}
         onLeave={handleLeave}
       />
       <RoomAudioRenderer />

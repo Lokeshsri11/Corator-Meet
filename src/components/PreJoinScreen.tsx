@@ -9,11 +9,12 @@ import type { ConnectionDetails } from "@/lib/types";
 
 type PreJoinScreenProps = {
   roomName: string;
+  isHost?: boolean;
   onJoin: (choices: LocalUserChoices, details: ConnectionDetails) => void;
   onBack: () => void;
 };
 
-export function PreJoinScreen({ roomName, onJoin, onBack }: PreJoinScreenProps) {
+export function PreJoinScreen({ roomName, isHost = false, onJoin, onBack }: PreJoinScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
 
@@ -33,6 +34,7 @@ export function PreJoinScreen({ roomName, onJoin, onBack }: PreJoinScreenProps) 
         body: JSON.stringify({
           roomName,
           participantName: choices.username.trim(),
+          isHost,
         }),
       });
 
@@ -68,13 +70,20 @@ export function PreJoinScreen({ roomName, onJoin, onBack }: PreJoinScreenProps) 
           <p className="text-sm uppercase tracking-[0.2em] text-corator-300">
             Joining room
           </p>
-          <h1 className="mt-2 text-3xl font-semibold">{roomName}</h1>
+          <h1 className="mt-2 font-mono text-3xl font-semibold tracking-wide text-white">
+            {roomName}
+          </h1>
           <p className="mt-2 text-gray-400">
             Check your camera and microphone before entering.
           </p>
+          {isHost && (
+            <p className="mt-2 text-sm text-amber-300">
+              You will join as the meeting host.
+            </p>
+          )}
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+        <div className="corator-prejoin rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-6 shadow-2xl shadow-black/40 backdrop-blur">
           <PreJoin
             defaults={{
               username: "",

@@ -72,3 +72,69 @@ body {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
+
+@keyframes emoji-float {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(1.4);
+  }
+}
+
+.emoji-float {
+  animation: emoji-float 3s ease-out forwards;
+}
+
+.meet-control-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  padding: 0.625rem 1rem !important;
+  font-size: 0.875rem !important;
+  color: #f9fafb !important;
+  transition: background 0.15s ease;
+}
+
+.meet-control-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.corator-prejoin .lk-prejoin {
+  background: transparent !important;
+}
+
+.corator-prejoin .lk-button {
+  border-radius: 0.75rem !important;
+  background: #1d67f1 !important;
+  font-weight: 500;
+}
+
+.corator-prejoin .lk-button:hover {
+  background: #3386fc !important;
+}
+
+.corator-prejoin input {
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: white !important;
+}
+
+.corator-prejoin .lk-participant-tile {
+  border-radius: 1rem !important;
+  border: 2px solid rgba(51, 134, 252, 0.3) !important;
+}
+
+.lk-focus-layout-wrapper .lk-participant-tile {
+  border-radius: 12px !important;
+}
+
+.lk-grid-layout-wrapper .lk-participant-tile {
+  border-radius: 12px !important;
+}

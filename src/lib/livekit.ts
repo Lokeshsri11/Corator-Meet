@@ -1,4 +1,4 @@
-import { RoomOptions, VideoPresets } from "livekit-client";
+import { RoomOptions, ScreenSharePresets, VideoPresets } from "livekit-client";
 
 export function getLiveKitRoomOptions(): RoomOptions {
   return {
@@ -13,6 +13,11 @@ export function getLiveKitRoomOptions(): RoomOptions {
         VideoPresets.h180,
         VideoPresets.h360,
         VideoPresets.h720,
+      ],
+      screenShareEncoding: ScreenSharePresets.h1080fps30.encoding,
+      screenShareSimulcastLayers: [
+        ScreenSharePresets.h720fps15,
+        ScreenSharePresets.h1080fps30,
       ],
       dtx: true,
       red: true,
