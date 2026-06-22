@@ -9,7 +9,7 @@ import {
   LayoutContextProvider,
   ParticipantTile,
   useCreateLayoutContext,
-  useParticipantContext,
+  useMaybeTrackRefContext,
   usePinnedTracks,
   useTracks,
 } from "@livekit/components-react";
@@ -128,14 +128,16 @@ function ParticipantTileWithHand({
 }: React.ComponentProps<typeof ParticipantTile> & {
   raisedHands: Record<string, string>;
 }) {
-  const participant = useParticipantContext();
-  const handRaised = raisedHands[participant.identity];
+  const trackRef = useMaybeTrackRefContext();
+  const handRaised = trackRef?.participant?.identity
+    ? raisedHands[trackRef.participant.identity]
+    : false;
 
   return (
     <div className="relative h-full w-full">
       <ParticipantTile {...props} />
       {handRaised && (
-        <span className="absolute right-2 top-2 z-10 rounded-full bg-amber-500/90 px-2 py-0.5 text-sm shadow-lg">
+        <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-amber-500/90 px-2 py-0.5 text-sm shadow-lg">
           ✋
         </span>
       )}
