@@ -28,20 +28,20 @@ type ConferenceLayoutProps = {
   floatingEmojis: FloatingEmoji[];
   strokes: DrawStroke[];
   penActive: boolean;
-  onPenToggle: () => void;
+  penColor: string;
   onStroke: (stroke: DrawStroke) => void;
-  onClearDrawing: () => void;
   raisedHands: Record<string, string>;
+  onScreenShareChange: (active: boolean) => void;
 };
 
 export function ConferenceLayout({
   floatingEmojis,
   strokes,
   penActive,
-  onPenToggle,
+  penColor,
   onStroke,
-  onClearDrawing,
   raisedHands,
+  onScreenShareChange,
 }: ConferenceLayoutProps) {
   const layoutContext = useCreateLayoutContext();
   const lastScreenShare = useRef<TrackReferenceOrPlaceholder | null>(null);
@@ -61,6 +61,10 @@ export function ConferenceLayout({
   const focusTrack = usePinnedTracks(layoutContext)?.[0];
   const carouselTracks = tracks.filter((t) => !isEqualTrackRef(t, focusTrack));
   const hasScreenShare = screenShareTracks.some((t) => t.publication.isSubscribed);
+
+  useEffect(() => {
+    onScreenShareChange(hasScreenShare);
+  }, [hasScreenShare, onScreenShareChange]);
 
   useEffect(() => {
     if (
@@ -87,35 +91,30 @@ export function ConferenceLayout({
 
   return (
     <LayoutContextProvider value={layoutContext}>
-      <div className="relative h-full w-full">
+      <div className="corator-meet-stage relative h-full w-full overflow-hidden">
         <EmojiReactionsOverlay emojis={floatingEmojis} />
 
         {!focusTrack ? (
-          <div className="lk-grid-layout-wrapper h-full">
-            <GridLayout tracks={tracks} className="h-full">
-              <ParticipantTileWithHand raisedHands={raisedHands} />
-            </GridLayout>
-          </div>
+          <GridLayout tracks={tracks} className="h-full w-full">
+            <ParticipantTileWithHand raisedHands={raisedHands} />
+          </GridLayout>
         ) : (
-          <div className="lk-focus-layout-wrapper relative h-full">
-            <FocusLayoutContainer className="h-full">
-              <CarouselLayout tracks={carouselTracks}>
-                <ParticipantTileWithHand raisedHands={raisedHands} />
-              </CarouselLayout>
-              <div className="relative h-full w-full">
-                {focusTrack && <FocusLayout trackRef={focusTrack} />}
-                {hasScreenShare && (
-                  <ScreenAnnotator
-                    strokes={strokes}
-                    active={penActive}
-                    onToggle={onPenToggle}
-                    onStroke={onStroke}
-                    onClear={onClearDrawing}
-                  />
-                )}
-              </div>
-            </FocusLayoutContainer>
-          </div>
+          <FocusLayoutContainer className="h-full w-full">
+            <CarouselLayout tracks={carouselTracks}>
+              <ParticipantTileWithHand raisedHands={raisedHands} />
+            </CarouselLayout>
+            <div className="relative h-full min-h-0 w-full">
+              {focusTrack && <FocusLayout trackRef={focusTrack} />}
+              {hasScreenShare && (
+                <ScreenAnnotator
+                  strokes={strokes}
+                  active={penActive}
+                  color={penColor}
+                  onStroke={onStroke}
+                />
+              )}
+            </div>
+          </FocusLayoutContainer>
         )}
       </div>
     </LayoutContextProvider>

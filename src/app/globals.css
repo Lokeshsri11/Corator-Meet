@@ -13,6 +13,8 @@
   --lk-accent-hover: #1d67f1;
   --lk-danger: #ef4444;
   --lk-success: #22c55e;
+  --meet-bar-height: 4.25rem;
+  --lk-control-bar-height: 0px;
 }
 
 * {
@@ -105,6 +107,7 @@ body {
   background: rgba(255, 255, 255, 0.12) !important;
 }
 
+/* legacy - kept for prejoin */
 .corator-prejoin .lk-prejoin {
   background: transparent !important;
 }
@@ -137,4 +140,97 @@ body {
 
 .lk-grid-layout-wrapper .lk-participant-tile {
   border-radius: 12px !important;
+}
+
+/* Corator Meet stage — fill viewport, docked layout */
+.corator-meet-stage .lk-grid-layout-wrapper,
+.corator-meet-stage .lk-focus-layout-wrapper {
+  height: 100% !important;
+  justify-content: stretch !important;
+  align-items: stretch !important;
+}
+
+.corator-meet-stage .lk-grid-layout {
+  height: 100% !important;
+  width: 100% !important;
+  padding: 0.75rem !important;
+}
+
+.corator-meet-stage .lk-focus-layout {
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 0.75rem !important;
+}
+
+.corator-meet-stage .lk-participant-tile {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.corator-meet-stage .lk-participant-tile video {
+  object-fit: cover !important;
+}
+
+.meet-shell .lk-room-container {
+  height: 100% !important;
+}
+
+.meet-bottom-bar {
+  --meet-bar-height: 4.25rem;
+}
+
+.meet-bottom-bar:has(> div:first-child.border-b) {
+  --meet-bar-height: 6.5rem;
+}
+
+.meet-icon-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-width: 2.75rem !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f9fafb !important;
+  font-size: 1.125rem !important;
+}
+
+.meet-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.meet-text-btn {
+  display: inline-flex !important;
+  align-items: center;
+  height: 2.75rem !important;
+  padding: 0 1rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f9fafb !important;
+  font-size: 0.875rem !important;
+}
+
+.meet-text-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.meet-leave-btn {
+  display: inline-flex !important;
+  align-items: center;
+  height: 2.75rem !important;
+  padding: 0 1.25rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: #ef4444 !important;
+  color: white !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+.meet-leave-btn:hover {
+  background: #dc2626 !important;
 }

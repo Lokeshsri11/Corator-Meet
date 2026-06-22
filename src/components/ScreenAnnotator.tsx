@@ -1,27 +1,24 @@
 "use client";
 
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import type { DrawStroke } from "@/lib/signals";
 
 type ScreenAnnotatorProps = {
   strokes: DrawStroke[];
   active: boolean;
+  color: string;
   onStroke: (stroke: DrawStroke) => void;
-  onClear: () => void;
-  onToggle: () => void;
 };
 
 export function ScreenAnnotator({
   strokes,
   active,
+  color,
   onStroke,
-  onClear,
-  onToggle,
 }: ScreenAnnotatorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
   const currentPointsRef = useRef<{ x: number; y: number }[]>([]);
-  const [color, setColor] = useState("#3386fc");
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -80,6 +77,7 @@ export function ScreenAnnotator({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (!active) return;
+    e.preventDefault();
     drawingRef.current = true;
     currentPointsRef.current = [getPoint(e)];
     canvasRef.current?.setPointerCapture(e.pointerId);
@@ -121,48 +119,13 @@ export function ScreenAnnotator({
   };
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        className={`absolute inset-0 z-20 ${active ? "cursor-crosshair" : "pointer-events-none"}`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-      />
-      <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-white/10 bg-[#0f1524]/95 px-3 py-2 backdrop-blur">
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`rounded-xl px-3 py-1.5 text-sm font-medium ${
-            active ? "bg-corator-600 text-white" : "bg-white/10 hover:bg-white/15"
-          }`}
-        >
-          {active ? "Drawing on" : "Pen tool"}
-        </button>
-        {active && (
-          <>
-            {["#3386fc", "#ef4444", "#22c55e", "#f59e0b", "#ffffff"].map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setColor(c)}
-                className={`h-6 w-6 rounded-full border-2 ${
-                  color === c ? "border-white" : "border-transparent"
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
-            <button
-              type="button"
-              onClick={onClear}
-              className="rounded-xl bg-white/10 px-3 py-1.5 text-xs hover:bg-white/15"
-            >
-              Clear
-            </button>
-          </>
-        )}
-      </div>
-    </>
+    <canvas
+      ref={canvasRef}
+      className={`absolute inset-0 z-20 ${active ? "cursor-crosshair" : "pointer-events-none"}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    />
   );
 }

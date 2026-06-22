@@ -72,7 +72,7 @@ export function MeetRoom({ choices, details, onLeave }: MeetRoomProps) {
       onDisconnected={handleDisconnected}
       onError={(err) => setError(err.message)}
       data-lk-theme="default"
-      className="h-screen bg-[#0b0f19]"
+      className="h-dvh overflow-hidden bg-[#0b0f19]"
     >
       <MeetConference
         participantName={details.participantName}

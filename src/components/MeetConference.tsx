@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRoomContext } from "@livekit/components-react";
 import { ConnectionStateToast } from "@livekit/components-react";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -35,6 +35,13 @@ export function MeetConference({
 
   const [sidePanel, setSidePanel] = useState<SidePanel>(null);
   const [penActive, setPenActive] = useState(false);
+  const [penColor, setPenColor] = useState("#3386fc");
+  const [hasScreenShare, setHasScreenShare] = useState(false);
+
+  const onScreenShareChange = useCallback((active: boolean) => {
+    setHasScreenShare(active);
+    if (!active) setPenActive(false);
+  }, []);
 
   function togglePanel(panel: SidePanel) {
     setSidePanel((current) => (current === panel ? null : panel));
@@ -42,20 +49,20 @@ export function MeetConference({
   }
 
   return (
-    <div className="flex h-screen flex-col bg-[#070b14]">
-      <header className="flex items-center justify-between border-b border-white/10 bg-gradient-to-r from-[#0c1220] to-[#0f1524] px-5 py-3">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-corator-600/20 text-lg font-bold text-corator-400">
+    <div className="meet-shell flex h-dvh flex-col overflow-hidden bg-[#070b14]">
+      <header className="z-40 flex shrink-0 items-center justify-between border-b border-white/10 bg-[#0c1220]/95 px-4 py-2.5 sm:px-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-corator-600/20 text-sm font-bold text-corator-400">
             CM
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-corator-300">
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-corator-300">
               Corator Meet
             </p>
-            <h1 className="text-lg font-semibold tracking-tight">{roomName}</h1>
+            <h1 className="text-base font-semibold sm:text-lg">{roomName}</h1>
           </div>
           {isHost && (
-            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs text-amber-300">
+            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300">
               Host
             </span>
           )}
@@ -65,23 +72,23 @@ export function MeetConference({
           <button
             type="button"
             onClick={onLeave}
-            className="rounded-full bg-red-500/90 px-4 py-2 text-sm font-medium hover:bg-red-500 lg:hidden"
+            className="rounded-full bg-red-500/90 px-3 py-1.5 text-sm font-medium hover:bg-red-500 lg:hidden"
           >
             Leave
           </button>
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <div className="relative min-w-0 flex-1">
+      <div className="flex min-h-0 flex-1 overflow-hidden pb-[var(--meet-bar-height)]">
+        <div className="relative min-h-0 min-w-0 flex-1">
           <ConferenceLayout
             floatingEmojis={signals.floatingEmojis}
             strokes={signals.strokes}
             penActive={penActive}
-            onPenToggle={() => setPenActive((v) => !v)}
+            penColor={penColor}
             onStroke={signals.sendStroke}
-            onClearDrawing={signals.clearDrawing}
             raisedHands={signals.raisedHands}
+            onScreenShareChange={onScreenShareChange}
           />
         </div>
 
@@ -125,6 +132,12 @@ export function MeetConference({
         activePanel={sidePanel}
         chatUnread={unread}
         isHost={isHost}
+        hasScreenShare={hasScreenShare}
+        penActive={penActive}
+        penColor={penColor}
+        onTogglePen={() => setPenActive((v) => !v)}
+        onPenColorChange={setPenColor}
+        onClearDrawing={signals.clearDrawing}
       />
 
       <ConnectionStateToast />
