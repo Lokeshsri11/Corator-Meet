@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useRoomContext } from "@livekit/components-react";
-import { ConnectionStateToast } from "@livekit/components-react";
+import { useCallback, useRef, useState } from "react";
+import {
+  useRoomContext,
+  useLocalParticipant,
+  ConnectionStateToast,
+} from "@livekit/components-react";
+import { Track } from "livekit-client";
 import { ChatPanel } from "@/components/ChatPanel";
 import { CopyRoomLink } from "@/components/CopyRoomLink";
 import { ConferenceLayout } from "@/components/ConferenceLayout";
@@ -10,6 +14,10 @@ import { ConferenceControls } from "@/components/ConferenceControls";
 import { NotesPanel } from "@/components/NotesPanel";
 import { ParticipantsPanel } from "@/components/ParticipantsPanel";
 import { ConnectionQualityBadge } from "@/components/ConnectionQuality";
+import {
+  AnnotationPiP,
+  type AnnotationPiPHandle,
+} from "@/components/AnnotationPiP";
 import { useChat } from "@/hooks/useChat";
 import { useRoomSignals } from "@/hooks/useRoomSignals";
 import { useAINotes } from "@/hooks/useAINotes";
@@ -32,16 +40,25 @@ export function MeetConference({
   onLeave,
 }: MeetConferenceProps) {
   const room = useRoomContext();
+  const { isScreenShareEnabled } = useLocalParticipant();
   const { messages, sendMessage, isOpen: chatOpen, toggleChat, unread } = useChat(room);
   const signals = useRoomSignals(room, participantName);
   const aiNotes = useAINotes(messages);
   const timer = useMeetingTimer();
+  const pipRef = useRef<AnnotationPiPHandle>(null);
 
   const [sidePanel, setSidePanel] = useState<SidePanel>(null);
   const [penActive, setPenActive] = useState(false);
   const [penColor, setPenColor] = useState("#3386fc");
   const [hasScreenShare, setHasScreenShare] = useState(false);
   const [viewMode, setViewMode] = useState<"auto" | "grid" | "speaker">("auto");
+
+  const isLocalSharing = isScreenShareEnabled;
+
+  const getLocalScreenTrack = useCallback((): MediaStreamTrack | null => {
+    const pub = room.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+    return pub?.track?.mediaStreamTrack ?? null;
+  }, [room]);
 
   const onScreenShareChange = useCallback((active: boolean) => {
     setHasScreenShare(active);
@@ -54,6 +71,10 @@ export function MeetConference({
   }
 
   const togglePen = useCallback(() => setPenActive((v) => !v), []);
+
+  const handleStartPiP = useCallback(async () => {
+    await pipRef.current?.requestPiP();
+  }, []);
 
   useKeyboardShortcuts({
     room,
@@ -159,7 +180,19 @@ export function MeetConference({
         onClearDrawing={signals.clearDrawing}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        isLocalSharing={isLocalSharing}
+        onStartPiP={handleStartPiP}
       />
+
+      {/* PiP compositor (hidden, activates on button click) */}
+      {isLocalSharing && (
+        <AnnotationPiP
+          ref={pipRef}
+          screenTrack={getLocalScreenTrack()}
+          strokes={signals.strokes}
+          liveDraws={signals.liveDraws}
+        />
+      )}
 
       <ConnectionStateToast />
     </div>

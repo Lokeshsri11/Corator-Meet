@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import type { DrawPoint, DrawStroke } from "@/lib/signals";
 import type { LiveDraw } from "@/hooks/useRoomSignals";
+import { drawSmooth } from "@/lib/drawing";
 
 type ScreenAnnotatorProps = {
   strokes: DrawStroke[];
@@ -14,46 +15,6 @@ type ScreenAnnotatorProps = {
 };
 
 const LINE_WIDTH = 3.5;
-
-/**
- * Draw a smooth stroke using the midpoint quadratic-curve technique.
- * This is the same method used by Excalidraw / Figma for smooth freehand lines.
- */
-function drawSmooth(
-  ctx: CanvasRenderingContext2D,
-  points: DrawPoint[],
-  color: string,
-  width: number,
-  w: number,
-  h: number,
-) {
-  if (points.length < 2) return;
-
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.globalAlpha = 0.92;
-  ctx.beginPath();
-
-  const sx = (p: DrawPoint) => p.x * w;
-  const sy = (p: DrawPoint) => p.y * h;
-
-  ctx.moveTo(sx(points[0]), sy(points[0]));
-
-  for (let i = 1; i < points.length - 1; i++) {
-    const midX = (sx(points[i]) + sx(points[i + 1])) / 2;
-    const midY = (sy(points[i]) + sy(points[i + 1])) / 2;
-    ctx.quadraticCurveTo(sx(points[i]), sy(points[i]), midX, midY);
-  }
-
-  // Connect to the last point
-  const last = points[points.length - 1];
-  ctx.lineTo(sx(last), sy(last));
-  ctx.stroke();
-  ctx.restore();
-}
 
 export function ScreenAnnotator({
   strokes,
