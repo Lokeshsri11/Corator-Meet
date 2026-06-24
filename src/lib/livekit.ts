@@ -2,7 +2,10 @@ import { RoomOptions, ScreenSharePresets, VideoPresets } from "livekit-client";
 
 export function getLiveKitRoomOptions(): RoomOptions {
   return {
-    adaptiveStream: true,
+    // Keep adaptive stream for camera tracks but not screen shares —
+    // adaptive stream would unsubscribe screen share when viewer switches
+    // tabs, which hides the ScreenAnnotator canvas and loses drawn strokes.
+    adaptiveStream: { pixelDensity: "screen" },
     dynacast: true,
     videoCaptureDefaults: {
       resolution: VideoPresets.h720.resolution,

@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import type { DrawPoint, DrawStroke } from "@/lib/signals";
-import { catmullRomToBezier } from "@/lib/signals";
 import type { LiveDraw } from "@/hooks/useRoomSignals";
 
 type ScreenAnnotatorProps = {
@@ -14,15 +13,13 @@ type ScreenAnnotatorProps = {
   onLivePoints: (id: string, points: DrawPoint[], color: string, width: number) => void;
 };
 
-const MIN_DIST = 3;
+const LINE_WIDTH = 3.5;
 
-function dist(a: DrawPoint, b: DrawPoint) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function drawSmoothStroke(
+/**
+ * Draw a smooth stroke using the midpoint quadratic-curve technique.
+ * This is the same method used by Excalidraw / Figma for smooth freehand lines.
+ */
+function drawSmooth(
   ctx: CanvasRenderingContext2D,
   points: DrawPoint[],
   color: string,
@@ -32,19 +29,29 @@ function drawSmoothStroke(
 ) {
   if (points.length < 2) return;
 
-  const scaled = points.map((p) => ({ x: p.x * w, y: p.y * h }));
-  const path = catmullRomToBezier(scaled);
-  if (!path) return;
-
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.globalAlpha = 0.85;
+  ctx.globalAlpha = 0.92;
+  ctx.beginPath();
 
-  const p2d = new Path2D(path);
-  ctx.stroke(p2d);
+  const sx = (p: DrawPoint) => p.x * w;
+  const sy = (p: DrawPoint) => p.y * h;
+
+  ctx.moveTo(sx(points[0]), sy(points[0]));
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const midX = (sx(points[i]) + sx(points[i + 1])) / 2;
+    const midY = (sy(points[i]) + sy(points[i + 1])) / 2;
+    ctx.quadraticCurveTo(sx(points[i]), sy(points[i]), midX, midY);
+  }
+
+  // Connect to the last point
+  const last = points[points.length - 1];
+  ctx.lineTo(sx(last), sy(last));
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -56,58 +63,114 @@ export function ScreenAnnotator({
   onStroke,
   onLivePoints,
 }: ScreenAnnotatorProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawingRef = useRef(false);
-  const currentPointsRef = useRef<DrawPoint[]>([]);
-  const currentIdRef = useRef("");
+  // Base canvas: committed strokes + remote live draws
+  const baseRef = useRef<HTMLCanvasElement>(null);
+  // Overlay canvas: current local drawing (incremental, no clear-redraw)
+  const overlayRef = useRef<HTMLCanvasElement>(null);
 
-  const redraw = useCallback(() => {
-    const canvas = canvasRef.current;
+  const drawingRef = useRef(false);
+  const pointsRef = useRef<DrawPoint[]>([]);
+  const strokeIdRef = useRef("");
+  const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Redraw base canvas from committed strokes + remote live draws */
+  const redrawBase = useCallback(() => {
+    const canvas = baseRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const w = canvas.width;
-    const h = canvas.height;
 
-    ctx.clearRect(0, 0, w, h);
-
-    for (const stroke of strokes) {
-      drawSmoothStroke(ctx, stroke.points, stroke.color, stroke.width, w, h);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of strokes) {
+      drawSmooth(ctx, s.points, s.color, s.width, canvas.width, canvas.height);
     }
-
     for (const ld of liveDraws) {
-      drawSmoothStroke(ctx, ld.points, ld.color, ld.width, w, h);
+      drawSmooth(ctx, ld.points, ld.color, ld.width, canvas.width, canvas.height);
     }
+  }, [strokes, liveDraws]);
 
-    if (drawingRef.current && currentPointsRef.current.length >= 2) {
-      drawSmoothStroke(ctx, currentPointsRef.current, color, 3, w, h);
-    }
-  }, [strokes, liveDraws, color]);
-
+  /** Sync canvas dimensions to parent */
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const base = baseRef.current;
+    const overlay = overlayRef.current;
+    if (!base || !overlay) return;
+    const parent = base.parentElement;
+    if (!parent) return;
 
-    const resize = () => {
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      canvas.width = parent.clientWidth;
-      canvas.height = parent.clientHeight;
-      redraw();
+    const sync = () => {
+      const w = parent.clientWidth;
+      const h = parent.clientHeight;
+      base.width = w;
+      base.height = h;
+      overlay.width = w;
+      overlay.height = h;
+      redrawBase();
     };
 
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(canvas.parentElement!);
-    return () => observer.disconnect();
-  }, [redraw]);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [redrawBase]);
 
+  /** Redraw base whenever strokes or liveDraws change */
   useEffect(() => {
-    redraw();
-  }, [redraw]);
+    redrawBase();
+  }, [redrawBase]);
 
-  const getPoint = (e: React.PointerEvent): DrawPoint => {
-    const canvas = canvasRef.current!;
+  /** Redraw when tab becomes visible again (handles cross-tab issue) */
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") redrawBase();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [redrawBase]);
+
+  /** Finish a stroke: commit overlay → base, clear overlay, notify parent */
+  const commitStroke = useCallback(() => {
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
+
+    if (sendTimerRef.current) {
+      clearTimeout(sendTimerRef.current);
+      sendTimerRef.current = null;
+    }
+
+    const pts = pointsRef.current;
+    const overlay = overlayRef.current;
+    const base = baseRef.current;
+
+    if (pts.length >= 2 && overlay && base) {
+      // Blit the incrementally-drawn overlay onto the base canvas
+      const baseCtx = base.getContext("2d");
+      baseCtx?.drawImage(overlay, 0, 0);
+      overlay.getContext("2d")?.clearRect(0, 0, overlay.width, overlay.height);
+
+      onStroke({ id: strokeIdRef.current, points: pts, color, width: LINE_WIDTH });
+    } else if (overlay) {
+      overlay.getContext("2d")?.clearRect(0, 0, overlay.width, overlay.height);
+    }
+
+    pointsRef.current = [];
+    strokeIdRef.current = "";
+  }, [color, onStroke]);
+
+  /** Global pointerup so strokes don't end if pointer briefly exits canvas */
+  useEffect(() => {
+    const onUp = () => {
+      if (drawingRef.current) commitStroke();
+    };
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [commitStroke]);
+
+  const getPoint = (e: React.PointerEvent | PointerEvent): DrawPoint => {
+    const canvas = overlayRef.current!;
     const rect = canvas.getBoundingClientRect();
     return {
       x: (e.clientX - rect.left) / rect.width,
@@ -118,52 +181,93 @@ export function ScreenAnnotator({
   const onPointerDown = (e: React.PointerEvent) => {
     if (!active) return;
     e.preventDefault();
+    e.stopPropagation();
+
     drawingRef.current = true;
     const pt = getPoint(e);
-    currentPointsRef.current = [pt];
-    currentIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    canvasRef.current?.setPointerCapture(e.pointerId);
+    pointsRef.current = [pt];
+    strokeIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    overlay.setPointerCapture(e.pointerId);
+
+    const ctx = overlay.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, overlay.width, overlay.height);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!active || !drawingRef.current) return;
 
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const ctx = overlay.getContext("2d");
+    if (!ctx) return;
+
     const pt = getPoint(e);
-    const pts = currentPointsRef.current;
-    const last = pts[pts.length - 1];
-
-    if (dist(pt, last) * 1000 < MIN_DIST) return;
-
+    const pts = pointsRef.current;
     pts.push(pt);
-    redraw();
 
-    onLivePoints(currentIdRef.current, [...pts], color, 3);
-  };
+    const w = overlay.width;
+    const h = overlay.height;
 
-  const onPointerUp = () => {
-    if (!drawingRef.current) return;
-    drawingRef.current = false;
-    const points = currentPointsRef.current;
-    if (points.length >= 2) {
-      onStroke({
-        id: currentIdRef.current,
-        points,
-        color,
-        width: 3,
-      });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = LINE_WIDTH;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = 0.92;
+
+    if (pts.length === 2) {
+      // Draw first segment as a straight line
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x * w, pts[0].y * h);
+      ctx.lineTo(pts[1].x * w, pts[1].y * h);
+      ctx.stroke();
+    } else if (pts.length >= 3) {
+      // Draw the newest smooth segment using the midpoint technique
+      const p1 = pts[pts.length - 3];
+      const p2 = pts[pts.length - 2];
+      const p3 = pts[pts.length - 1];
+
+      const prevMidX = (p1.x * w + p2.x * w) / 2;
+      const prevMidY = (p1.y * h + p2.y * h) / 2;
+      const newMidX = (p2.x * w + p3.x * w) / 2;
+      const newMidY = (p2.y * h + p3.y * h) / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(prevMidX, prevMidY);
+      ctx.quadraticCurveTo(p2.x * w, p2.y * h, newMidX, newMidY);
+      ctx.stroke();
     }
-    currentPointsRef.current = [];
-    currentIdRef.current = "";
+
+    // Throttle network updates (no need to send every pixel)
+    if (!sendTimerRef.current) {
+      sendTimerRef.current = setTimeout(() => {
+        sendTimerRef.current = null;
+        onLivePoints(strokeIdRef.current, [...pts], color, LINE_WIDTH);
+      }, 40);
+    }
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={`absolute inset-0 z-20 ${active ? "cursor-crosshair" : "pointer-events-none"}`}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerLeave={onPointerUp}
-    />
+    <div
+      className="absolute inset-0 z-20"
+      style={{ pointerEvents: active ? "auto" : "none" }}
+    >
+      {/* Base: committed + remote strokes */}
+      <canvas
+        ref={baseRef}
+        className="absolute inset-0"
+        style={{ pointerEvents: "none" }}
+      />
+      {/* Overlay: current local drawing */}
+      <canvas
+        ref={overlayRef}
+        className={`absolute inset-0 ${active ? "cursor-crosshair" : ""}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+      />
+    </div>
   );
 }
