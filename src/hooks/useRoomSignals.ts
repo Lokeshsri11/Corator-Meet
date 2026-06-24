@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, DataPacket_Kind } from "livekit-client";
 import {
   SIGNAL_TOPIC,
   decodeSignal,
   encodeSignal,
+  type DrawPoint,
   type DrawStroke,
   type SignalMessage,
 } from "@/lib/signals";
@@ -16,17 +17,27 @@ export type FloatingEmoji = {
   sender: string;
 };
 
+export type LiveDraw = {
+  id: string;
+  points: DrawPoint[];
+  color: string;
+  width: number;
+  sender: string;
+};
+
 export function useRoomSignals(room: Room | undefined, localName: string) {
   const [raisedHands, setRaisedHands] = useState<Record<string, string>>({});
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
+  const [liveDraws, setLiveDraws] = useState<LiveDraw[]>([]);
   const [localHandRaised, setLocalHandRaised] = useState(false);
+  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const publish = useCallback(
-    async (message: SignalMessage) => {
+    async (message: SignalMessage, reliable = true) => {
       if (!room) return;
       await room.localParticipant.publishData(encodeSignal(message), {
-        reliable: message.type === "raise-hand" || message.type === "clear-drawing",
+        reliable,
         topic: SIGNAL_TOPIC,
       });
     },
@@ -71,9 +82,29 @@ export function useRoomSignals(room: Room | undefined, localName: string) {
           break;
         case "draw":
           setStrokes((prev) => [...prev, message.stroke]);
+          setLiveDraws((prev) => prev.filter((d) => d.id !== message.stroke.id));
+          break;
+        case "draw-live":
+          setLiveDraws((prev) => {
+            const idx = prev.findIndex((d) => d.id === message.id);
+            const entry: LiveDraw = {
+              id: message.id,
+              points: message.points,
+              color: message.color,
+              width: message.width,
+              sender: message.sender,
+            };
+            if (idx >= 0) {
+              const next = [...prev];
+              next[idx] = entry;
+              return next;
+            }
+            return [...prev, entry];
+          });
           break;
         case "clear-drawing":
           setStrokes([]);
+          setLiveDraws([]);
           break;
       }
     };
@@ -125,11 +156,36 @@ export function useRoomSignals(room: Room | undefined, localName: string) {
     });
   }, [room, localHandRaised, localName, publish]);
 
+  const sendLiveDrawPoints = useCallback(
+    (id: string, points: DrawPoint[], color: string, width: number) => {
+      if (!room) return;
+      if (throttleRef.current) return;
+
+      throttleRef.current = setTimeout(() => {
+        throttleRef.current = null;
+      }, 40);
+
+      publish(
+        {
+          type: "draw-live",
+          id,
+          points,
+          color,
+          width,
+          sender: room.localParticipant.identity,
+        },
+        false,
+      );
+    },
+    [room, publish],
+  );
+
   const sendStroke = useCallback(
     async (stroke: DrawStroke) => {
       if (!room) return;
       setStrokes((prev) => [...prev, stroke]);
-      await publish({ type: "draw", stroke, sender: room.localParticipant.identity });
+      setLiveDraws((prev) => prev.filter((d) => d.id !== stroke.id));
+      await publish({ type: "draw", stroke, sender: room.localParticipant.identity }, true);
     },
     [room, publish],
   );
@@ -137,17 +193,20 @@ export function useRoomSignals(room: Room | undefined, localName: string) {
   const clearDrawing = useCallback(async () => {
     if (!room) return;
     setStrokes([]);
-    await publish({ type: "clear-drawing", sender: room.localParticipant.identity });
+    setLiveDraws([]);
+    await publish({ type: "clear-drawing", sender: room.localParticipant.identity }, true);
   }, [room, publish]);
 
   return {
     raisedHands,
     floatingEmojis,
     strokes,
+    liveDraws,
     localHandRaised,
     sendEmoji,
     toggleRaiseHand,
     sendStroke,
+    sendLiveDrawPoints,
     clearDrawing,
   };
 }

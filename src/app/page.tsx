@@ -22,54 +22,67 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#1d3a6b,transparent_45%),#0b0f19]">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-10">
+    <main className="min-h-screen bg-[#0d1117]">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-[40%] left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-corator-600/[0.07] blur-[120px]" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-6 py-8">
+        {/* Header */}
         <header className="flex items-center justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-corator-300">
-              SorsCo
-            </p>
-            <h1 className="text-2xl font-semibold">{appName}</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-corator-600 text-sm font-bold text-white">
+              CM
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-corator-400">
+                SorsCo
+              </p>
+              <h1 className="text-lg font-semibold text-gray-100">{appName}</h1>
+            </div>
           </div>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
-            Self-hosted · SorsCo infrastructure
+          <span className="hidden rounded-full border border-white/[0.06] bg-white/[0.03] px-3 py-1 text-[11px] text-gray-500 sm:block">
+            Self-hosted infrastructure
           </span>
         </header>
 
-        <section className="my-auto grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        {/* Hero */}
+        <section className="my-auto grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
-            <h2 className="max-w-xl text-4xl font-semibold leading-tight md:text-5xl">
-              Video meetings that work on real networks.
+            <h2 className="max-w-xl text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl">
+              Video meetings built for{" "}
+              <span className="bg-gradient-to-r from-corator-400 to-corator-600 bg-clip-text text-transparent">
+                real networks
+              </span>
             </h2>
-            <p className="mt-4 max-w-xl text-lg text-gray-300">
-              Adaptive streaming, resilient audio, and in-meeting chat — built
-              for low-bandwidth connections and persistent collaboration.
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-gray-400">
+              Adaptive streaming, resilient audio, and real-time collaboration tools
+              — designed for low-bandwidth connections.
             </p>
 
-            <ul className="mt-8 space-y-3 text-sm text-gray-300">
-              <li className="flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-corator-400" />
-                Your media server on your VPS — no SaaS dependency
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-corator-400" />
-                Simulcast + dynacast for low-network video
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-corator-400" />
-                Opus FEC/RED for resilient audio
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="h-2 w-2 rounded-full bg-corator-400" />
-                Real-time chat during calls
-              </li>
+            <ul className="mt-8 space-y-3.5">
+              {[
+                "Simulcast + dynacast for low-network video",
+                "Opus FEC/RED for resilient audio",
+                "Screen sharing with live pen annotations",
+                "In-meeting chat, emoji reactions, AI notes",
+                "Keyboard shortcuts (M, V, H, C, D)",
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-3 text-sm text-gray-400">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-corator-500">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  {feature}
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
-            <h3 className="text-xl font-semibold">Join or create a meeting</h3>
-            <p className="mt-2 text-sm text-gray-400">
-              Enter your name and a room code. Share the room link with others.
+          {/* Join Card */}
+          <div className="rounded-2xl border border-white/[0.06] bg-[#161b22] p-6 shadow-2xl shadow-black/20">
+            <h3 className="text-lg font-semibold text-gray-100">Join or create a meeting</h3>
+            <p className="mt-1.5 text-sm text-gray-500">
+              Enter your name and a room code, or create a new room.
             </p>
 
             <form
@@ -80,46 +93,52 @@ export default function HomePage() {
               }}
             >
               <label className="block">
-                <span className="mb-2 block text-sm text-gray-300">Your name</span>
+                <span className="mb-1.5 block text-xs font-medium text-gray-400">Your name</span>
                 <input
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Rahul"
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none ring-corator-500 focus:ring-2"
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-corator-600/50 focus:ring-1 focus:ring-corator-600/30"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm text-gray-300">Room code</span>
+                <span className="mb-1.5 block text-xs font-medium text-gray-400">Room code</span>
                 <input
                   value={room}
                   onChange={(event) => setRoom(event.target.value)}
                   placeholder="e.g. team-standup"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 outline-none ring-corator-500 focus:ring-2"
+                  className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-corator-600/50 focus:ring-1 focus:ring-corator-600/30"
                 />
               </label>
 
               <button
                 type="submit"
-                className="w-full rounded-xl bg-corator-600 py-3 font-medium hover:bg-corator-500"
+                className="w-full rounded-xl bg-corator-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-corator-500"
               >
                 Join meeting
               </button>
             </form>
 
+            <div className="relative my-4 flex items-center">
+              <div className="flex-1 border-t border-white/[0.06]" />
+              <span className="px-3 text-[11px] text-gray-600">or</span>
+              <div className="flex-1 border-t border-white/[0.06]" />
+            </div>
+
             <button
               type="button"
               onClick={() => goToRoom(generateRoomId(), true)}
-              className="mt-3 w-full rounded-xl border border-white/10 py-3 text-sm text-gray-200 hover:bg-white/5"
+              className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] py-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/[0.06]"
             >
               Create new room
             </button>
           </div>
         </section>
 
-        <footer className="text-center text-xs text-gray-500">
-          Self-hosted Corator Meet · Frontend on Dokploy · Media on your VPS
+        <footer className="text-center text-[11px] text-gray-600">
+          Self-hosted Corator Meet · Powered by LiveKit
         </footer>
       </div>
     </main>

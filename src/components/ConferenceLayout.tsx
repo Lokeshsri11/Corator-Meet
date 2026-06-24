@@ -21,27 +21,33 @@ import {
 import { RoomEvent, Track } from "livekit-client";
 import { ScreenAnnotator } from "@/components/ScreenAnnotator";
 import { EmojiReactionsOverlay } from "@/components/EmojiReactionsOverlay";
-import type { DrawStroke } from "@/lib/signals";
-import type { FloatingEmoji } from "@/hooks/useRoomSignals";
+import type { DrawPoint, DrawStroke } from "@/lib/signals";
+import type { FloatingEmoji, LiveDraw } from "@/hooks/useRoomSignals";
 
 type ConferenceLayoutProps = {
   floatingEmojis: FloatingEmoji[];
   strokes: DrawStroke[];
+  liveDraws: LiveDraw[];
   penActive: boolean;
   penColor: string;
   onStroke: (stroke: DrawStroke) => void;
+  onLivePoints: (id: string, points: DrawPoint[], color: string, width: number) => void;
   raisedHands: Record<string, string>;
   onScreenShareChange: (active: boolean) => void;
+  viewMode: "auto" | "grid" | "speaker";
 };
 
 export function ConferenceLayout({
   floatingEmojis,
   strokes,
+  liveDraws,
   penActive,
   penColor,
   onStroke,
+  onLivePoints,
   raisedHands,
   onScreenShareChange,
+  viewMode,
 }: ConferenceLayoutProps) {
   const layoutContext = useCreateLayoutContext();
   const lastScreenShare = useRef<TrackReferenceOrPlaceholder | null>(null);
@@ -61,6 +67,10 @@ export function ConferenceLayout({
   const focusTrack = usePinnedTracks(layoutContext)?.[0];
   const carouselTracks = tracks.filter((t) => !isEqualTrackRef(t, focusTrack));
   const hasScreenShare = screenShareTracks.some((t) => t.publication.isSubscribed);
+
+  const useFocusLayout =
+    viewMode === "speaker" ||
+    (viewMode === "auto" && !!focusTrack);
 
   useEffect(() => {
     onScreenShareChange(hasScreenShare);
@@ -91,10 +101,10 @@ export function ConferenceLayout({
 
   return (
     <LayoutContextProvider value={layoutContext}>
-      <div className="corator-meet-stage relative h-full w-full overflow-hidden">
+      <div className="corator-meet-stage relative h-full w-full overflow-hidden p-2 sm:p-3">
         <EmojiReactionsOverlay emojis={floatingEmojis} />
 
-        {!focusTrack ? (
+        {viewMode === "grid" || (!useFocusLayout && viewMode === "auto") ? (
           <GridLayout tracks={tracks} className="h-full w-full">
             <ParticipantTileWithHand raisedHands={raisedHands} />
           </GridLayout>
@@ -108,9 +118,11 @@ export function ConferenceLayout({
               {hasScreenShare && (
                 <ScreenAnnotator
                   strokes={strokes}
+                  liveDraws={liveDraws}
                   active={penActive}
                   color={penColor}
                   onStroke={onStroke}
+                  onLivePoints={onLivePoints}
                 />
               )}
             </div>
@@ -132,12 +144,19 @@ function ParticipantTileWithHand({
     ? raisedHands[trackRef.participant.identity]
     : false;
 
+  const isSpeaking = trackRef?.participant?.isSpeaking;
+
   return (
-    <div className="relative h-full w-full">
+    <div
+      className={`participant-tile-wrapper relative h-full w-full overflow-hidden rounded-xl transition-shadow duration-200 ${
+        isSpeaking ? "ring-2 ring-corator-400/70 shadow-[0_0_12px_rgba(51,134,252,0.25)]" : ""
+      }`}
+    >
       <ParticipantTile {...props} />
       {handRaised && (
-        <span className="pointer-events-none absolute right-2 top-2 z-10 rounded-full bg-amber-500/90 px-2 py-0.5 text-sm shadow-lg">
-          ✋
+        <span className="pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full bg-amber-500/90 px-2 py-0.5 text-xs font-medium shadow-lg">
+          <span className="text-sm">✋</span>
+          <span className="hidden sm:inline">Raised</span>
         </span>
       )}
     </div>

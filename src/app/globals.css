@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --lk-bg: #0b0f19;
-  --lk-bg2: #111827;
-  --lk-control-bg: rgba(17, 24, 39, 0.92);
-  --lk-control-hover-bg: rgba(31, 41, 55, 0.95);
-  --lk-fg: #f9fafb;
-  --lk-fg-secondary: #9ca3af;
+  --lk-bg: #0d1117;
+  --lk-bg2: #161b22;
+  --lk-control-bg: rgba(22, 27, 34, 0.95);
+  --lk-control-hover-bg: rgba(33, 38, 45, 0.95);
+  --lk-fg: #e6edf3;
+  --lk-fg-secondary: #8b949e;
   --lk-accent: #3386fc;
   --lk-accent-hover: #1d67f1;
-  --lk-danger: #ef4444;
-  --lk-success: #22c55e;
-  --meet-bar-height: 4.25rem;
+  --lk-danger: #f85149;
+  --lk-success: #3fb950;
+  --meet-bar-height: 3.5rem;
   --lk-control-bar-height: 0px;
 }
 
@@ -30,8 +30,11 @@ body {
   margin: 0;
   background: var(--lk-bg);
   color: var(--lk-fg);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ──────── LiveKit base overrides ──────── */
 
 .lk-room-container {
   height: 100%;
@@ -42,9 +45,7 @@ body {
 }
 
 .lk-control-bar {
-  background: var(--lk-control-bg) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+  display: none !important;
 }
 
 .lk-button {
@@ -58,31 +59,52 @@ body {
 .lk-participant-tile {
   border-radius: 12px !important;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: #21262d !important;
 }
 
 .lk-participant-metadata {
-  background: rgba(0, 0, 0, 0.55) !important;
-  backdrop-filter: blur(8px);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, transparent 100%) !important;
+  padding: 0.5rem 0.75rem !important;
 }
 
+.lk-participant-metadata-item {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.lk-focus-layout .lk-participant-tile {
+  border-radius: 12px !important;
+}
+
+/* ──────── Scrollbar ──────── */
+
 .scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ──────── Emoji float animation ──────── */
 
 @keyframes emoji-float {
   0% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+  70% {
+    opacity: 1;
+  }
   100% {
     opacity: 0;
-    transform: translateY(-120px) scale(1.4);
+    transform: translateY(-140px) scale(1.5);
   }
 }
 
@@ -90,24 +112,8 @@ body {
   animation: emoji-float 3s ease-out forwards;
 }
 
-.meet-control-btn {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 9999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  padding: 0.625rem 1rem !important;
-  font-size: 0.875rem !important;
-  color: #f9fafb !important;
-  transition: background 0.15s ease;
-}
+/* ──────── PreJoin ──────── */
 
-.meet-control-btn:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-}
-
-/* legacy - kept for prejoin */
 .corator-prejoin .lk-prejoin {
   background: transparent !important;
 }
@@ -124,25 +130,18 @@ body {
 
 .corator-prejoin input {
   border-radius: 0.75rem !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
   color: white !important;
 }
 
 .corator-prejoin .lk-participant-tile {
   border-radius: 1rem !important;
-  border: 2px solid rgba(51, 134, 252, 0.3) !important;
+  border: 2px solid rgba(51, 134, 252, 0.2) !important;
 }
 
-.lk-focus-layout-wrapper .lk-participant-tile {
-  border-radius: 12px !important;
-}
+/* ──────── Meet stage layout ──────── */
 
-.lk-grid-layout-wrapper .lk-participant-tile {
-  border-radius: 12px !important;
-}
-
-/* Corator Meet stage — fill viewport, docked layout */
 .corator-meet-stage .lk-grid-layout-wrapper,
 .corator-meet-stage .lk-focus-layout-wrapper {
   height: 100% !important;
@@ -153,13 +152,20 @@ body {
 .corator-meet-stage .lk-grid-layout {
   height: 100% !important;
   width: 100% !important;
-  padding: 0.75rem !important;
+  padding: 0 !important;
+  gap: 8px !important;
 }
 
 .corator-meet-stage .lk-focus-layout {
   height: 100% !important;
   max-height: 100% !important;
-  padding: 0.75rem !important;
+  padding: 0 !important;
+  gap: 8px !important;
+}
+
+.corator-meet-stage .lk-focus-layout-wrapper .lk-carousel {
+  padding: 0 !important;
+  gap: 6px !important;
 }
 
 .corator-meet-stage .lk-participant-tile {
@@ -175,62 +181,143 @@ body {
   height: 100% !important;
 }
 
+/* ──────── Bottom bar height ──────── */
+
 .meet-bottom-bar {
-  --meet-bar-height: 4.25rem;
+  --meet-bar-height: 3.5rem;
 }
 
 .meet-bottom-bar:has(> div:first-child.border-b) {
-  --meet-bar-height: 6.5rem;
+  --meet-bar-height: 5.75rem;
 }
 
-.meet-icon-btn {
+/* ──────── Control buttons ──────── */
+
+.meet-media-btn {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  width: 2.75rem !important;
-  height: 2.75rem !important;
-  min-width: 2.75rem !important;
+  width: 2.5rem !important;
+  height: 2.5rem !important;
+  min-width: 2.5rem !important;
   padding: 0 !important;
   border-radius: 9999px !important;
-  border: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #e6edf3 !important;
+  font-size: 1rem !important;
+  transition: all 0.15s ease !important;
+}
+
+.meet-media-btn:hover {
   background: rgba(255, 255, 255, 0.08) !important;
-  color: #f9fafb !important;
-  font-size: 1.125rem !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-.meet-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
+.meet-media-btn[data-lk-enabled="false"],
+.meet-media-btn[data-lk-source="microphone"][data-lk-enabled="false"],
+.meet-media-btn[data-lk-source="camera"][data-lk-enabled="false"] {
+  background: rgba(248, 81, 73, 0.12) !important;
+  border-color: rgba(248, 81, 73, 0.2) !important;
+  color: #f85149 !important;
 }
 
-.meet-text-btn {
+.meet-media-btn[data-lk-enabled="false"]:hover {
+  background: rgba(248, 81, 73, 0.2) !important;
+}
+
+.meet-media-btn[data-lk-source="screen_share"][data-lk-enabled="true"] {
+  background: rgba(51, 134, 252, 0.15) !important;
+  border-color: rgba(51, 134, 252, 0.3) !important;
+  color: #58a6ff !important;
+}
+
+.meet-action-btn {
   display: inline-flex !important;
   align-items: center;
-  height: 2.75rem !important;
-  padding: 0 1rem !important;
-  border-radius: 9999px !important;
+  justify-content: center;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  min-width: 2.25rem !important;
+  padding: 0 !important;
+  border-radius: 0.5rem !important;
   border: none !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #f9fafb !important;
-  font-size: 0.875rem !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
 }
 
-.meet-text-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
+.meet-action-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e6edf3 !important;
+}
+
+.meet-action-btn-active {
+  color: #58a6ff !important;
+  background: rgba(56, 139, 253, 0.1) !important;
 }
 
 .meet-leave-btn {
   display: inline-flex !important;
   align-items: center;
-  height: 2.75rem !important;
-  padding: 0 1.25rem !important;
+  gap: 0.375rem;
+  height: 2.25rem !important;
+  padding: 0 0.875rem !important;
   border-radius: 9999px !important;
   border: none !important;
-  background: #ef4444 !important;
+  background: #da3633 !important;
   color: white !important;
-  font-size: 0.875rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 500 !important;
+  transition: background 0.15s ease !important;
 }
 
 .meet-leave-btn:hover {
-  background: #dc2626 !important;
+  background: #f85149 !important;
+}
+
+/* Legacy button styles for prejoin */
+.meet-control-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  padding: 0.625rem 1rem !important;
+  font-size: 0.875rem !important;
+  color: #e6edf3 !important;
+  transition: background 0.15s ease;
+}
+
+.meet-control-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ──────── Active speaker glow ──────── */
+
+.participant-tile-wrapper {
+  transition: box-shadow 0.3s ease, outline 0.3s ease;
+}
+
+/* ──────── Participant placeholder (camera off) ──────── */
+
+.lk-participant-tile .lk-participant-placeholder {
+  background: #21262d !important;
+}
+
+/* ──────── Connection toast ──────── */
+
+.lk-toast {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #21262d !important;
+  color: #e6edf3 !important;
+}
+
+/* ──────── Focus layout sidebar carousel ──────── */
+
+.corator-meet-stage .lk-focus-layout-wrapper {
+  gap: 8px !important;
 }
