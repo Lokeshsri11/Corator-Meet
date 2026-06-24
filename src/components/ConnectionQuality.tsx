@@ -1,10 +1,16 @@
 "use client";
 
 import { ConnectionQuality as CQ } from "livekit-client";
-import { useConnectionQualityIndicator } from "@livekit/components-react";
+import {
+  useConnectionQualityIndicator,
+  useRoomContext,
+} from "@livekit/components-react";
 
 export function ConnectionQualityBadge() {
-  const { quality } = useConnectionQualityIndicator();
+  const room = useRoomContext();
+  const { quality } = useConnectionQualityIndicator({
+    participant: room.localParticipant,
+  });
 
   const label =
     quality === CQ.Excellent ? "Excellent" :
